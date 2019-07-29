@@ -840,6 +840,14 @@ class ClientTransaction(Transaction):
                     self.timeout('K', 0)
 
     def timeout(self, name, timeout):
+        # "If the response for the BYE is a 481 (Call/Transaction Does
+        # Not Exist) or a 408 (Request Timeout) or no response at all
+        # is received for the BYE (that is, a timeout is returned by
+        # the client transaction), the UAC MUST consider the session
+        # and the dialog terminated."
+        if self.request.method == 'BYE':
+            self.state = 'terminated'
+            return
         if self.state == 'trying' or self.state == 'proceeding':
             if name == 'E':
                 timeout = min(2*timeout, self.timer.T2) if self.state == 'trying' else self.timer.T2
